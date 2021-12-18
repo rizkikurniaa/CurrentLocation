@@ -81,14 +81,16 @@ class MainActivity : AppCompatActivity() {
             ActivityCompat.requestPermissions(
                 this,
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), LOCATION_PERMISSION_REQ_CODE
-            );
+            )
             return
         }
+
         fusedLocationClient.lastLocation
             .addOnSuccessListener { location ->
                 // getting the last known or current location
                 latitude = location.latitude
                 longitude = location.longitude
+
                 binding.tvLatitude.text = "Latitude: ${location.latitude}"
                 binding.tvLongitude.text = "Longitude: ${location.longitude}"
                 binding.tvProvider.text = "Provider: ${location.provider}"
