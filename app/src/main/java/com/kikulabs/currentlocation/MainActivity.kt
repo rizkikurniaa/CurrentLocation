@@ -1,17 +1,21 @@
 package com.kikulabs.currentlocation
 
 import android.Manifest
+import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.location.LocationManager
 import android.net.Uri
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.provider.Settings
 import android.view.View
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.kikulabs.currentlocation.databinding.ActivityMainBinding
+
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -20,6 +24,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var latitude: Double = 0.0
     private var longitude: Double = 0.0
+    private lateinit var lm: LocationManager
+    private var gps_enabled = false
+    private var network_enabled = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,9 +35,34 @@ class MainActivity : AppCompatActivity() {
 
         // initialize fused location client
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        lm = applicationContext.getSystemService(LOCATION_SERVICE) as LocationManager
 
         binding.btGetLocation.setOnClickListener {
-            getCurrentLocation()
+            try {
+                gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER)
+            } catch (ex: Exception) {
+            }
+
+            try {
+                network_enabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+            } catch (ex: Exception) {
+            }
+
+            if (!gps_enabled && !network_enabled) {
+                // notify user
+                AlertDialog.Builder(this)
+                    .setMessage(R.string.gps_network_not_enabled)
+                    .setPositiveButton(R.string.open_location_settings
+                    ) { _, _ ->
+                        startActivity(
+                            Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                        )
+                    }
+                    .setNegativeButton(R.string.cancel, null)
+                    .show()
+            } else {
+                getCurrentLocation()
+            }
         }
 
         binding.btOpenMap.setOnClickListener {
@@ -40,11 +72,16 @@ class MainActivity : AppCompatActivity() {
 
     private fun getCurrentLocation() {
         // checking location permission
-        if (ActivityCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
             // request permission
-            ActivityCompat.requestPermissions(this,
-                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), LOCATION_PERMISSION_REQ_CODE);
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), LOCATION_PERMISSION_REQ_CODE
+            );
             return
         }
         fusedLocationClient.lastLocation
@@ -58,8 +95,10 @@ class MainActivity : AppCompatActivity() {
                 binding.btOpenMap.visibility = View.VISIBLE
             }
             .addOnFailureListener {
-                Toast.makeText(this, "Failed on getting current location",
-                    Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this, "Failed on getting current location",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
     }
 
@@ -70,16 +109,20 @@ class MainActivity : AppCompatActivity() {
         when (requestCode) {
             LOCATION_PERMISSION_REQ_CODE -> {
                 if (grantResults.isNotEmpty() &&
-                    grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    grantResults[0] == PackageManager.PERMISSION_GRANTED
+                ) {
                     // permission granted
                 } else {
                     // permission denied
-                    Toast.makeText(this, "You need to grant permission to access location",
-                        Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this, "You need to grant permission to access location",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
         }
     }
+
     private fun openMap() {
         val uri = Uri.parse("geo:${latitude},${longitude}")
         val mapIntent = Intent(Intent.ACTION_VIEW, uri)
