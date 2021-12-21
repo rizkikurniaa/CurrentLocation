@@ -1,6 +1,10 @@
 <resources>
     <string name="app_name">CurrentLocation</string>
+    <string name="grant_permission">You need to grant permission to access location</string>
+    <string name="failed">Failed on getting current location</string>
     <string name="gps_network_not_enabled">GPS network not enabled</string>
     <string name="open_location_settings">Open location settings</string>
+    <string name="recalibrate">Failed on getting current location, recalibrate your maps first.</string>
+    <string name="open_google_maps">Open Google Maps</string>
     <string name="cancel">Cancel</string>
 </resources>
